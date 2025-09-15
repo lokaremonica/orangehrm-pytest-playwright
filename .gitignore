@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+
+# Virtual environment
+.venv/
+env/
+venv/
+*.egg-info/
+
+# Pytest cache & reports
+.pytest_cache/
+*.xml
+*.log
+
+# Playwright artifacts
+playwright-report/
+test-results/
+videos/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Reports & Screenshots
+report.html
+screenshots/

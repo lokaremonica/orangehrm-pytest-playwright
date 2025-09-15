@@ -5,26 +5,44 @@ from pages.dashboard_page import DashboardPage
 from pages.admin_page import AdminPage
 
 
-def test_orangehrm_role_based_dashboard(page):
-    for case in TEST_USERS:
-        login = LoginPage(page)
-        dashboard = DashboardPage(page)
-        admin = AdminPage(page)
+@pytest.mark.parametrize("case", TEST_USERS, ids=[u["username"] for u in TEST_USERS])
+def test_orangehrm_role_based_dashboard(page, case):
+    login = LoginPage(page)
+    dashboard = DashboardPage(page)
+    admin = AdminPage(page)
 
-        login.goto(BASE_URL)
-        login.login(case["username"], case["password"])
+    # Step 1: Login
+    login.goto(BASE_URL)
+    login.login(case["username"], case["password"])
+    page.attach(f"{case['username']}_after_login")
 
-        if case["expected"] == "admin":
-            print("✅ Logged in as Admin")
-            admin.go_to_admin()
-            admin.add_ess_user("John Doe", "johndoe", "Password123")
-            print("✅ ESS User created")
-            dashboard.logout()
+    # ------------------ ADMIN FLOW ------------------
+    if case["expected"] == "admin":
+        admin.go_to_admin()
+        page.attach(f"{case['username']}_admin_page")
 
-        elif case["expected"] == "ess":
-            count = dashboard.verify_quick_launch_cards(EXPECTED_GRIDS["ess"])
-            print(f"✅ ESS Quick Launch verified with {count} cards")
-            dashboard.logout()
+        admin.add_ess_user("joker john selvam", "johndoe", "Password123")
+        page.attach(f"{case['username']}_ess_user_created")
 
-        else:
-            pytest.fail(f"❌ Unexpected role {case['expected']}")
+        dashboard.logout()
+        page.attach(f"{case['username']}_after_logout")
+
+    # ------------------ ESS FLOW ------------------
+    elif case["expected"] == "ess":
+        count = dashboard.verify_quick_launch_cards(EXPECTED_GRIDS["ess"])
+        assert count == EXPECTED_GRIDS["ess"], f"Expected {EXPECTED_GRIDS['ess']} cards, found {count}"
+        page.attach(f"{case['username']}_ess_dashboard")
+
+        dashboard.logout()
+        page.attach(f"{case['username']}_after_logout")
+
+    # ------------------ INVALID FLOW ------------------
+    # elif case["expected"] == "invalid":
+    #     error = page.locator("p.oxd-alert-content-text")
+    #     assert error.is_visible(), "Error message not shown for invalid login"
+    #     assert "Invalid credentials" in error.inner_text()
+    #     page.attach(f"{case['username']}_invalid_login")
+
+    else:
+        page.attach(f"{case['username']}_unexpected_role")
+        pytest.fail(f"❌ Unexpected role {case['expected']}")
